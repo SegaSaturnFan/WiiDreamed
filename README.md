@@ -2,35 +2,13 @@
 
 a fork from https://github.com/skmp/nullDCe
 
-attempting to impliment frame skipping
+attempting to impliment frame skipping and maybe a few other things
 
-## TODO (Maybe you can help !)
+## Things I wanna do
 
-### Simple
-
-- Test current state with every game and report compatibility (see "compatibility" below)
-- Help me finding regression (NOT bugs or glitch, only regression for now please)
-
-### Developer (Easy)
-
-- Clean Warning/notes during compilation I guess
-- Player 2 Gamecube/Wiimote (1rst step)
-- Player 3/4 Gamecube/Wiimote (2nd step)
-- Fishing Rod/USB Keyboard/Lightgun/Maracas support
+- Player 2-4 Gamecube/Wiimote
 - Put external config file for controllers (controls.cfg)
-- Clean Clean Clean
-- Optimize Optimize Optimize
-- Translate French baguette comments to English
-
-### Developer (Normal)
-
-- Coding routine adjustement for accuracy (FAST/BALANCED/ACCURATE)
-- Coding routine adjustement for performance (LOW/NORMAL/HIGH/EXTRA)
-- 50/60 ips for PAL/NTSC ? (should be ok)
-- both 4/3 and fullscreen support (implemented, need fix on some games)
 - Frame Skipping
-- Wii U gamepad support like WiiStation ? ( https://github.com/FIX94/libwiidrc )
-- Wii U Gamepad, Dualshock 3 and Wii U Pro Controller support ? ( https://github.com/BenoitAdam94/nullDC4Wii/issues/15 )
 
 ### Developer (Hard)
 

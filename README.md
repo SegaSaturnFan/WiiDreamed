@@ -10,15 +10,6 @@ attempting to impliment frame skipping and maybe a few other things
 - Put external config file for controllers (controls.cfg)
 - Frame Skipping
 
-### Developer (Hard)
-
-- Improve gxRend.cpp = main file about specific rendering for Wii
-- Splitting gxRend.cpp in multiple files ? (beware this is more tricky than it look)
-- Table convertion between SH4 Opcodes of SH4 and the WiiPPC ?
-- Use LLVM to port code for PowerPC ?
-- Full Dynarec implementation (AI seems to know about this)
-- Sound implementation
-
 ## Installation
 
 ### Put BIOS file and game file

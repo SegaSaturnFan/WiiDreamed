@@ -1,6 +1,8 @@
-# NullDC4Wii - Dreamcast Emulator for Wii
+# NullDC4Wii - Faster Dreamcast Emulator for Wii
 
 a fork from https://github.com/skmp/nullDCe
+
+attempting to impliment frame skipping
 
 ## TODO (Maybe you can help !)
 

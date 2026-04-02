@@ -28,15 +28,26 @@ extern "C" int get_ratio_preset();
 #define ORIGINAL() (get_ratio_preset() == 0)
 #define FULLSCREEN() (get_ratio_preset() == 1)
 
+// Advanced alpha (DEBUG - test)
+extern "C" int get_advanced_alpha_preset();
+#define ADVANCED_ALPHA() (get_advanced_alpha_preset() == 1)
+
 // This is defined in main.cpp
 extern "C" int get_debug_message();
 #define DEBUG_MESSAGE() (get_debug_message() == 1)
 
 extern "C" int get_debug_loop();
 
-// For future improvement. This would be defined in nullDC.cpp or main.cpp
-extern int g_current_frameskip; // 0 = no skip, 1 = skip 1 frame, 2 = skip 2 frame
-extern int g_frame_counter;
+// Frame skipping
+extern "C" int get_frameskip_preset();
+
+#define NO_FRAMESKIP() (get_frameskip_preset() == 0)
+#define FRAMESKIP_1() (get_frameskip_preset() == 1)
+#define FRAMESKIP_2() (get_frameskip_preset() == 2)
+#define FRAMESKIP_AUTO() (get_frameskip_preset() == 3)
+
+int current_frameskip;
+int frame_counter;
 
 
 
@@ -1006,6 +1017,52 @@ static void SetTextureParams(PolyParam *mod)
 static bool s_did_3d_render = false;
 
 // ============================
+// Frame-skip state
+// ============================
+
+// Wall-clock time (seconds) when the last DoRender() call started.
+// os_GetSeconds() is the platform timer already used by SPG.cpp — no extra
+// headers or libogc-specific constants required.
+static double s_render_start_time = 0.0;
+static double s_last_render_time  = 0.0;   // seconds taken by the previous rendered frame
+
+// One NTSC frame budget in seconds.  If the previous render exceeded this
+// we skip the next frame in AUTO mode.
+#define VBLANK_BUDGET_SEC  (1.0 / 60.0)
+
+// Returns true when the current frame should be dropped (geometry discarded,
+// no GX draw calls issued).  The Dreamcast game still gets its render-done
+// interrupt so its timing loop is not disturbed.
+static bool ShouldSkipFrame()
+{
+    if (NO_FRAMESKIP())
+        return false;
+
+    if (FRAMESKIP_1())
+    {
+        // Render every other frame: 0,skip,0,skip,...
+        frame_counter = (frame_counter + 1) & 1;
+        return frame_counter != 0;
+    }
+
+    if (FRAMESKIP_2())
+    {
+        // Render one in three: 0,skip,skip, 0,skip,skip,...
+        frame_counter = (frame_counter + 1) % 3;
+        return frame_counter != 0;
+    }
+
+    if (FRAMESKIP_AUTO())
+    {
+        // Skip next frame only when the previous render took longer than the
+        // vblank budget.  This recovers automatically once the load drops.
+        return s_last_render_time > VBLANK_BUDGET_SEC;
+    }
+
+    return false;
+}
+
+// ============================
 // The main rendering loop. Executes GX commands to draw the stored vertex lists.
 // ============================
 
@@ -1185,7 +1242,8 @@ void DoRender()
           {(2.f / dc_width), 0, +(640.f / dc_width), 0},
           {0, -(2.f / dc_height), -(480.f / dc_height), 0},
           {0, 0, p5, p6},
-          {0, 0, -1, 0}};
+          {0, 0, -1, 0}
+        };
 
   // load the matrix to GX
   GX_LoadProjectionMtx(mtx, GX_PERSPECTIVE);
@@ -1244,7 +1302,8 @@ void DoRender()
       {
         SetTextureParams(drawMod);
 
-        if (HIGH() || EXTRA())
+        // Test - Claude say this is more accurate for alpha ?
+        if (ADVANCED_ALPHA())
         {
           u32 fmt = drawMod->tcw.NO_PAL.PixelFmt;
           int alpha_fmt = (fmt == 0 || fmt == 7) ? 1 : 0;
@@ -1312,6 +1371,15 @@ void StartRender()
   render_end_pending_cycles = VtxCnt * 15;
   if (render_end_pending_cycles < 50000)
     render_end_pending_cycles = 50000;
+
+  // ── Frame-skip early-out ─────────────────────────────────────────────────
+  // Must come AFTER render_end_pending_cycles is set so the game's timing
+  // loop receives the render-done interrupt on schedule even for skipped frames.
+  if (ShouldSkipFrame())
+  {
+    reset_vtx_state();   // discard this frame's geometry; free the buffers
+    return;              // no GX calls — saves ~10-15 ms on a heavy frame
+  }
 
   if (FB_W_SOF1 & 0x1000000)
   {
@@ -1406,7 +1474,9 @@ void StartRender()
     return;
   }
 
+  s_render_start_time = os_GetSeconds();
   DoRender();
+  s_last_render_time  = os_GetSeconds() - s_render_start_time;
 
   FrameCount++;
 }

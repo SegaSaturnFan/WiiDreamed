@@ -8,7 +8,7 @@ attempting to impliment frame skipping and maybe a few other things
 
 - Player 2-4 Gamecube/Wiimote
 - Put external config file for controllers (controls.cfg)
-- Frame Skipping
+- Make Preformance Better
 
 ## Installation
 
